@@ -1,0 +1,51 @@
+{
+  "name": "resume-ai",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.16.0 <21 || >=22.3.0"
+  },
+  "scripts": {
+    "clean": "rm -rf .next",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.36.5",
+    "@clerk/themes": "^2.4.57",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.99.3",
+    "canvas": "^3.2.1",
+    "framer-motion": "^12.38.0",
+    "next": "^15.5.9",
+    "node-fetch": "^3.3.2",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pdf-parser": "^1.0.5",
+    "pdfjs-dist": "^5.4.296",
+    "postgres": "^3.4.8",
+    "razorpay": "^2.9.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "react-markdown": "^10.1.0",
+    "tesseract.js": "^7.0.0",
+    "unpdf": "^1.4.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "daisyui": "^5.5.19",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^15.5.9",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "~5.9.3"
+  }
+}
