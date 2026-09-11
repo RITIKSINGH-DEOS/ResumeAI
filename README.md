@@ -261,9 +261,6 @@ Payments are securely handled using **Razorpay**.
 | `npm run clean` | Clear Next.js cache |
 
 ---
-## 👨‍💻 Developed By
-
-**Ritik Singh**
 
 GitHub: https://github.cm/RITIKSINGH-DEOS
 

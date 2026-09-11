@@ -45,7 +45,7 @@ export function LandingFooter() {
           </div>
 
           <p className="text-xs font-normal tracking-wide text-[#666666]">
-            © 2026 ResumeAI · Built by Ritik Singh
+            © 2026 ResumeAI
           </p>
         </div>
       </div>
