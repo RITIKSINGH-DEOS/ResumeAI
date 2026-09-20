@@ -31,6 +31,7 @@ const listItem = {
 export function DashboardResumeSection() {
   const { user, isLoaded } = useUser();
   const [resumes, setResumes] = useState<ResumeRow[]>([]);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -48,24 +49,31 @@ export function DashboardResumeSection() {
 
   const syncAndFetch = useCallback(async () => {
     if (!user) return;
-    const sync = await fetch("/api/users/sync", { method: "POST" });
-    if (!sync.ok) {
-      const j = (await sync.json().catch(() => ({}))) as { error?: string };
-      toastErrorOnce(j.error ?? "Sync failed");
+    setDbError(null);
+    try {
+      const sync = await fetch("/api/users/sync", { method: "POST" });
+      if (!sync.ok) {
+        const j = (await sync.json().catch(() => ({}))) as { error?: string };
+        setDbError(j.error ?? "Database sync failed");
+        setLoading(false);
+        return;
+      }
+      const r = await fetch("/api/resumes");
+      if (!r.ok) {
+        const j = (await r.json().catch(() => ({}))) as { error?: string };
+        setDbError(j.error ?? "Failed to load resumes");
+        setLoading(false);
+        return;
+      }
+      const j = (await r.json()) as { resumes?: ResumeRow[] };
+      setResumes(j.resumes ?? []);
+    } catch {
+      setDbError("Unable to connect to database. Please check your network or Supabase project status.");
+    } finally {
       setLoading(false);
-      return;
     }
-    const r = await fetch("/api/resumes");
-    if (!r.ok) {
-      const j = (await r.json().catch(() => ({}))) as { error?: string };
-      toastErrorOnce(j.error ?? "Failed to load resumes");
-      setLoading(false);
-      return;
-    }
-    const j = (await r.json()) as { resumes?: ResumeRow[] };
-    setResumes(j.resumes ?? []);
-    setLoading(false);
-  }, [user, toastErrorOnce]);
+  }, [user]);
+
 
   useEffect(() => {
     if (!isLoaded || !user) return;
