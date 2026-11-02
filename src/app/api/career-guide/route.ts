@@ -1,6 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { buildCareerAdvisorPrompt, parseGeminiCareerGuideJson } from "@/lib/careerGuideGemini";
+import {
+  buildCareerAdvisorPrompt,
+  parseGeminiCareerGuideJson,
+  generateFallbackCareerGuide,
+} from "@/lib/careerGuideGemini";
 import { isPremiumPublicMetadata } from "@/lib/clerkPremium";
 import {
   checkGeminiRateLimit,
@@ -50,16 +54,6 @@ export async function POST(req: Request) {
       { status: 503 }
     );
   }
-  if (!routeWithGemini && !getHuggingFaceToken()) {
-    return NextResponse.json(
-      {
-        error:
-          "Career guide without Gemini polish uses Hugging Face. Set HUGGINGFACE_API_TOKEN in .env.local. Optional: HUGGINGFACE_MODEL overrides the default model.",
-        code: "HF_CONFIG",
-      },
-      { status: 503 }
-    );
-  }
 
   const ip = getClientIp(req);
   const rl = checkGeminiRateLimit({
@@ -71,6 +65,11 @@ export async function POST(req: Request) {
   if (!rl.ok) return geminiRateLimitJsonResponse(rl);
 
   try {
+    if (!routeWithGemini && !getHuggingFaceToken()) {
+      const guide = generateFallbackCareerGuide(skillsTruncated);
+      return NextResponse.json({ guide, skillsUsed: skillsTruncated });
+    }
+
     const { text } = await generateTextBySubscription({
       isPro: routeWithGemini,
       userPrompt,
@@ -78,17 +77,16 @@ export async function POST(req: Request) {
     });
 
     if (!text?.trim()) {
-      return NextResponse.json(
-        { error: "Empty model response. Try again or check provider configuration.", code: "LLM_EMPTY" },
-        { status: 502 }
-      );
+      const guide = generateFallbackCareerGuide(skillsTruncated);
+      return NextResponse.json({ guide, skillsUsed: skillsTruncated });
     }
 
     const guide = parseGeminiCareerGuideJson(text);
     return NextResponse.json({ guide, skillsUsed: skillsTruncated });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Career guide generation failed";
-    console.error("[career-guide]", message);
+    console.error("[career-guide] falling back to resilient guide:", message);
+
     if (routeWithGemini) {
       const status = httpStatusForGeminiFailure(message);
       return NextResponse.json(
@@ -99,9 +97,9 @@ export async function POST(req: Request) {
         { status }
       );
     }
-    return NextResponse.json(
-      { error: message.length > 400 ? `${message.slice(0, 397)}...` : message, code: "HF_ERROR" },
-      { status: 502 }
-    );
+
+    // Free tier fallback if Hugging Face is out of credits or encounters an error
+    const guide = generateFallbackCareerGuide(skillsTruncated);
+    return NextResponse.json({ guide, skillsUsed: skillsTruncated });
   }
 }
